@@ -82,7 +82,6 @@ def verbEs(texts):
         corrected_sentences = gf.correct(sent1, max_candidates=1)
         
         print("[Input] ", sent1)
-        
         test = str(corrected_sentences)
         for corrected_sentence in corrected_sentences:
             counter = counter + 1
