@@ -1,6 +1,18 @@
 import spacy
 from morphemes import Morphemes
 from flask import Flask, request, render_template
+from gramformer import Gramformer
+import torch
+
+def set_seed(seed):
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+
+set_seed(1212) #used for gramformer
+
+gf = Gramformer(models =1, use_gpu=False) #1=corrector, 2 = detector(WIP)
+
 
 nlp = spacy.load('en_core_web_trf')
 app = Flask(__name__, static_folder='static')
@@ -28,6 +40,8 @@ def analyze_text():
         results['typeToken'] = type_token_ratio(text)
     if 'morpheme' in selected_analysis:
         results['morpheme'] = morph(text)
+    if 'verbErr' in selected_analysis:
+        results['verbErr'] = verbEs(text)
 
     return render_template('homepage.html', results=results)
 
@@ -55,6 +69,30 @@ def type_token_ratio(text):
     uniqueCount = different_words(text)
     return round((uniqueCount/totalCount),2)
 
+# REQUIREMENT - Verb errors
+@app.route('/verbErr', methods=['POST'])
+def verbEs(texts):
+    doc = nlp(texts)
+    counter = 0
+    assert doc.has_annotation("SENT_START")
+    for sent in doc.sents:
+        print(sent.text)
+        sent1 = sent.text
+        
+        corrected_sentences = gf.correct(sent1, max_candidates=1)
+        
+        print("[Input] ", sent1)
+        
+        test = str(corrected_sentences)
+        for corrected_sentence in corrected_sentences:
+            counter = counter + 1
+            hold= gf.get_edits(sent1, corrected_sentence)
+            if (hold == []):
+                print("no change")
+                counter = counter - 1
+        print("-" *100)
+    return(counter)
+
 # REQUIREMENT - Morphemes
 @app.route('/morpheme', methods=['POST'])
 def morph(text):
@@ -68,7 +106,6 @@ def morph(text):
             counter = counter + 1
         if(tense == ['Past']):
             counter = counter + 1
-            
         counter = counter + 1
     return counter
     
