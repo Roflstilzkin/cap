@@ -58,23 +58,31 @@ def type_token_ratio(text):
 # REQUIREMENT - Morphemes
 @app.route('/morpheme', methods=['POST'])
 def morph(text):
-   ## doc =nlp(text)
-    ##counter = 0
-    ##for token in doc:
-    ##   counter = counter + 1
-    ##  if token.morph.get == Plur | Past
-    ##     counter = counter + 1
-    ##    print(token, token.morph)
-    ##return counter
-    m=Morphemes(path)
-    c = 0
-    test = text.split()
-    for i in test:
-        c = c+ (m.count(i))
-        print(c)
-        print(m.parse(i))
-
-    return (c)
+    doc =nlp(text)
+    counter = 0
+    for token in doc:
+        tense = token.morph.get('Tense')
+        plur = token.morph.get('Number')
+        print(token, tense, plur)
+        if(plur == ['Plur']):
+            counter = counter + 1
+        if(tense == ['Past']):
+            counter = counter + 1
+            
+        counter = counter + 1
+    return counter
+    
+    ### when using morphemes library
+    ### the complexity is too high and makes very slow
+    #m=Morphemes(path)
+    #c = 0
+    #test = text.split()
+    #for i in test:
+    #    c = c+ (m.count(i))
+    #    print(c)
+    #   print(m.parse(i))
+    #
+    #return (c)
     
     
 if __name__ == '__main__':
